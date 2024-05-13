@@ -1,37 +1,35 @@
-    ##1 import the socket library
 from socket import *
-    ##2 give the server IP and port number to make  the client can connect on it 
-host = "127.0.0.1"
-port = 2177
-    ##3 create socket work on  IPV4 & tcp protocol 
-         ##if i need IPV6 & UDP protocol write this client_server= socket(AF_UNIX,SOCK_DGRAM)
-client_socket = socket(AF_INET, SOCK_STREAM)
-    ##4 connect the server 
-client_socket.connect((host, port))
-print("Connected to the server.")
 
-         ## Define buffer size as None initially
-buffer_size = None
-    ##5 infinite loop 
+s = socket(AF_INET, SOCK_STREAM)
+print("[*] socket created")
+
+ip = '127.0.0.1'
+port = 50000
+
+s.connect((ip, port))
+print("[*] Connected to server")
+# code made by youssif seliem
 while True:
-    sent_data = input("Client:")
-    if sent_data.lower() == 'bye':
-        client_socket.send(sent_data.encode("utf-8"))
+    x = input('Client : ')
+    if x == 'q':
+        print('[*] Bye')
+        s.send(x.encode('utf-8'))
         break
-    client_socket.send(sent_data.encode("utf-8"))
 
-         ## Receive data in chunks until no more data is received
-    recv_data = b""
-    while True:
-         ## Use 4096 as default buffer size
-        chunk = client_socket.recv(buffer_size or 4096)  
-        if not chunk:
-            break
-        recv_data += chunk
+    # Send the length of the message (fixed size: 10 bytes)
+    message_data = x.encode('utf-8')
+    message_length = str(len(message_data)).zfill(10).encode('utf-8')
+    s.send(message_length)
 
-    recv_data = recv_data.decode("utf-8")
-    if recv_data.lower() == 'bye':
-        break
-    print("Server:", recv_data)
+    # Send the actual message
+    s.send(message_data)
 
-client_socket.close()
+    # Receive the length of the message (fixed size: 10 bytes)
+    length_data = s.recv(10)
+    length = int(length_data.decode('utf-8'))
+
+    # Receive the message with variable length
+    received_message = s.recv(length).decode('utf-8')
+    print("Server : " + received_message)
+
+s.close()

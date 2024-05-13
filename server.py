@@ -1,46 +1,39 @@
-    ##1 import the socket library
 from socket import *
 
-try:
-    ##2  reserve a port on your computer
-    host = "127.0.0.1"
-    port = 2177
-    ##3 create socket work on  IPV4 & tcp protocol 
-         ##if i need IPV6 & UDP protocol write this client_server= socket(AF_UNIX,SOCK_DGRAM)
-    server_socket = socket(AF_INET, SOCK_STREAM)
-    ##4 bind to the host IP address and port number
-    server_socket.bind((host, port))
-    ##5 put the server into listening mode
-    server_socket.listen(5)
-    print("Server listening on {}:{}".format(host, port))
-    ##6 establisg connection with client
-    client_socket, client_address = server_socket.accept()
-    print("Connection to: ", client_address[0])
-    
-    ## Define buffer size as None initially
-    buffer_size = None
-    ##7 infinite loop 
-    while True:
-        recv_data = client_socket.recv(buffer_size or 4096).decode("utf-8")
-        if not recv_data:
-            break
+s = socket(AF_INET, SOCK_STREAM)
+print("[*] socket created")
 
-        if recv_data.lower() == 'bye':
-            break
+ip = '127.0.0.1'
+port = 50000
 
-        print(f"Client: {recv_data}")
+s.bind((ip, port))
+print(f"[*] socket is binded to {port}")
+s.listen(5)
+print("[*] Server is listening")
 
-        sent_data = input("Server: ")
-        if sent_data.lower() == 'bye':
-            client_socket.send(sent_data.encode("utf-8"))
-            break
+c, addr = s.accept()
+print(f"[*] connection received from {addr}")
+# code made by youssif seliem
+while True:
+    # Receive the length of the message (fixed size: 10 bytes)
+    length_data = c.recv(10)
+    length = int(length_data.decode('utf-8'))
 
-        client_socket.send(sent_data.encode("utf-8"))
+    # Receive the message with variable length
+    received_message = c.recv(length).decode('utf-8')
+    print("Client : " + received_message)
 
-    ##8 end the connection between server and client 
-    server_socket.close()
+    x = input('Server : ')
+    if x == 'q':
+        print('[*] Bye, see you in another connection')
+        c.close()
+        break
 
-except error:
-    print(error)
-except KeyboardInterrupt:
-    print("\n\nServer stopped by user")
+    # Send the length of the message (fixed size: 10 bytes)
+    message_data = x.encode('utf-8')
+    message_length = str(len(message_data)).zfill(10).encode('utf-8')
+    c.send(message_length)
+
+    # Send the actual message
+    c.send(message_data)
+c.close()
